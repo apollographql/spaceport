@@ -1,34 +1,49 @@
 import { track } from "../segment";
 
+const CLI_NAME: string = "rover";
+
 interface Platform {
   // the platform from which the command was run (i.e. linux, macOS, or windows)
   os: string;
-  // if we think this command is being run in a CLI
-  is_ci: boolean;
-  // the name of the CI we think is being used
-  ci_name: string | null;
+  // CI info
+  continuous_integration: string | null;
+}
+
+interface Command {
+  // the name of the command that was run
+  name: string,
+  // the arguments that were passed to the command
+  arguments: object
 }
 
 interface Session {
   // the command usage where commands are paths and flags are query strings
   // i.e. ap schema push --graph --variant would become ap/schema/push?graph&variant
-  command: string | null;
+  command: Command;
   // Apollo generated machine ID. This is a UUID and stored globally at ~/.apollo/config.toml
   machine_id: string;
   // A unique session id
   session_id: string;
+  // the sha-256 hash of the current working directory
+  cwd_hash: string;
   // Information about the current architecture/platform
   platform: Platform;
   // The current version of the CLI
-  release_version: string;
+  cli_version: string;
 }
 
 export function reportTelemetry(_: any, event: FetchEvent) {
   const { headers } = event.request;
   const contentType = headers.get("content-type");
+  const userAgent = headers.get("user-agent");
+  if (!userAgent || !userAgent.startsWith(CLI_NAME)) {
+    return event.respondWith(
+      new Response("Invalid Permission", { status: 403 })
+    )
+  }
   if (!contentType || !contentType.includes("application/json")) {
     return event.respondWith(
-      new Response("Internal Server Error", { status: 500 })
+      new Response("Malformed Request", { status: 400 })
     );
   }
 
@@ -40,21 +55,31 @@ export function reportTelemetry(_: any, event: FetchEvent) {
 
 async function respondWith(body: Promise<Session>): Promise<Response> {
   await body;
-  return new Response("Report recieved", { status: 200 });
+  return new Response("Report received", { status: 200 });
 }
 
 export async function waitUntil(event: FetchEvent, body: Promise<Session>) {
-  const app = event.request.headers.get("User-Agent") || "Unknown app";
+  const userAgent = event.request.headers.get("user-agent") || undefined;
   const parsed = await body;
-  const event_payload = {
-    userId: parsed.machine_id,
-    event: parsed.command,
-    properties: parsed,
-    context: {
-      app,
-      os: parsed.platform.os,
-    },
-  };
 
+  const event_payload = {
+    anonymousId: parsed.machine_id,
+    event: parsed.command.name,
+    context: {
+      app: {
+        name: CLI_NAME,
+        version: parsed.cli_version,
+      },
+      os: {
+        name: parsed.platform.os
+      },
+      userAgent
+    },
+    messageId: parsed.session_id,
+    properties: {
+      cwd_hash: parsed.cwd_hash,
+      arguments: parsed.command.arguments
+    }
+  };
   await track(event_payload);
 }
