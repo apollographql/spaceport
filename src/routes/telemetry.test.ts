@@ -12,7 +12,7 @@ beforeEach(() => {
 });
 
 afterEach(fetchMock.resetBehavior);
-it("sends an event to segment when a build is downloaded", async () => {
+it("sends an event to segment when a command is run", async () => {
   const segment = fetchMock.post("https://api.segment.io/v1/track", 200);
 
   require("../index");
@@ -21,18 +21,23 @@ it("sends an event to segment when a build is downloaded", async () => {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      "user-agent": "Apollo CLI Mock",
+      "user-agent": "rover/0.0.1",
     },
     body: JSON.stringify({
-      command: "schema push",
+      command: {
+        name: "schema push",
+        arguments: {
+          sensitive: true
+        }
+      },
       machine_id: "1234",
       session_id: "12345",
       platform: {
         os: "linux",
-        is_ci: false,
-        ci_name: null,
+        continuous_integration: null,
       },
-      release_version: "0.0.1",
+      cli_version: "0.0.1",
+      cwd_hash: "890123"
     }),
   });
 
@@ -45,25 +50,26 @@ it("sends an event to segment when a build is downloaded", async () => {
   expect(url).toContain("segment.io");
   expect(JSON.parse(options!.body as any)).toMatchInlineSnapshot(`
     Object {
+      "anonymousId": "1234",
       "context": Object {
-        "app": "Apollo CLI Mock",
+        "app": Object {
+          "name": "rover",
+          "version": "0.0.1",
+        },
         "library": "CLI Worker",
-        "os": "linux",
+        "os": Object {
+          "name": "linux",
+        },
+        "userAgent": "rover/0.0.1",
       },
       "event": "schema push",
-      "messageId": "CLI Worker-mock_uuid",
+      "messageId": "12345",
       "properties": Object {
-        "command": "schema push",
-        "machine_id": "1234",
-        "platform": Object {
-          "ci_name": null,
-          "is_ci": false,
-          "os": "linux",
+        "arguments": Object {
+          "sensitive": true,
         },
-        "release_version": "0.0.1",
-        "session_id": "12345",
+        "cwd_hash": "890123",
       },
-      "userId": "1234",
     }
   `);
 });
@@ -76,23 +82,29 @@ it("doesn't report invalid messages", async () => {
   const request = new Request("/telemetry", {
     method: "POST",
     headers: {
-      "user-agent": "Apollo CLI Mock",
+      // no content-type header
+      "user-agent": "rover/0.0.1",
     },
     body: JSON.stringify({
-      command: "schema push",
+      command: {
+        name: "schema push",
+        arguments: {
+          sensitive: true
+        }
+      },
       machine_id: "1234",
       session_id: "12345",
       platform: {
         os: "linux",
-        is_ci: false,
-        ci_name: null,
+        continuous_integration: null,
       },
-      release_version: "0.0.1",
-    }),
+      cli_version: "0.0.1",
+      properties: "890123"
+    })
   });
 
   const response: any = await self.trigger("fetch", request);
-  expect(response.status).toEqual(500);
+  expect(response.status).toEqual(400);
   const call = segment.lastCall();
   if (!call) throw new Error("Last call not returned");
 
@@ -100,25 +112,26 @@ it("doesn't report invalid messages", async () => {
   expect(url).toContain("segment.io");
   expect(JSON.parse(options!.body as any)).toMatchInlineSnapshot(`
       Object {
+        "anonymousId": "1234",
         "context": Object {
-          "app": "Apollo CLI Mock",
+          "app": Object {
+            "name": "rover",
+            "version": "0.0.1",
+          },
           "library": "CLI Worker",
-          "os": "linux",
+          "os": Object {
+            "name": "linux",
+          },
+          "userAgent": "rover/0.0.1",
         },
         "event": "schema push",
-        "messageId": "CLI Worker-mock_uuid",
+        "messageId": "12345",
         "properties": Object {
-          "command": "schema push",
-          "machine_id": "1234",
-          "platform": Object {
-            "ci_name": null,
-            "is_ci": false,
-            "os": "linux",
+          "arguments": Object {
+            "sensitive": true,
           },
-          "release_version": "0.0.1",
-          "session_id": "12345",
+          "cwd_hash": "890123",
         },
-        "userId": "1234",
       }
     `);
 });
