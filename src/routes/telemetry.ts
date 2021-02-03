@@ -64,7 +64,7 @@ export async function waitUntil(event: FetchEvent, body: Promise<Session>) {
 
   const event_payload = {
     anonymousId: parsed.machine_id,
-    event: parsed.command.name,
+    event: "rover invocation",
     context: {
       app: {
         name: CLI_NAME,
@@ -77,6 +77,7 @@ export async function waitUntil(event: FetchEvent, body: Promise<Session>) {
     },
     messageId: parsed.session_id,
     properties: {
+      command: parsed.command.name,
       cwd_hash: parsed.cwd_hash,
       arguments: parsed.command.arguments
     }
