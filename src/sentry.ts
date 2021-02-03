@@ -32,6 +32,7 @@ export async function log(err: Error, request: Request) {
   try {
     // don't log if no sentry information around
     if (typeof SENTRY_PROJECT_ID === "undefined") return;
+    if (typeof SENTRY_KEY === "undefined") return;
     const body = JSON.stringify(toSentryEvent(err, request));
 
     for (let i = 0; i <= RETRIES; i++) {
@@ -84,11 +85,11 @@ export function toSentryEvent(err: Error, request: Request) {
     },
     extra: extraKeys.length
       ? {
-          [errType]: extraKeys.reduce(
-            (obj, key) => ({ ...obj, [key]: (err as any)[key] }),
-            {}
-          ),
-        }
+        [errType]: extraKeys.reduce(
+          (obj, key) => ({ ...obj, [key]: (err as any)[key] }),
+          {}
+        ),
+      }
       : undefined,
     tags: TAGS,
     platform: "javascript",
@@ -98,12 +99,12 @@ export function toSentryEvent(err: Error, request: Request) {
     request:
       request && request.url
         ? {
-            method: request.method,
-            url: request.url,
-            query_string: searchParams ? searchParams.toString() : "",
-            headers: request.headers,
-            data: request.body,
-          }
+          method: request.method,
+          url: request.url,
+          query_string: searchParams ? searchParams.toString() : "",
+          headers: request.headers,
+          data: request.body,
+        }
         : undefined,
     // release: SENTRY_RELEASE,
   };
