@@ -42,3 +42,4 @@ jobs:
           SENTRY_LOG_LEVEL: info
         with:
           environment: production
+          version: $(git rev-parse --short HEAD)
