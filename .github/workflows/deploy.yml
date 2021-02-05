@@ -14,8 +14,6 @@ jobs:
       USER: root
     steps:
       - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
 
       - name: Publish
         uses: cloudflare/wrangler-action@1.3.0
@@ -42,3 +40,4 @@ jobs:
           SENTRY_LOG_LEVEL: info
         with:
           environment: production
+          version: $(git rev-parse --short "$GITHUB_SHA")
