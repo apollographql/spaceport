@@ -70,6 +70,13 @@ router.get("/", (_, event) => {
   );
 });
 
+// test our sentry integration
+router.get("/throw", throwError);
+
+function throwError(_: any, _event: FetchEvent) {
+  throw new Error("Throwing error at /throw");
+}
+
 router.get("*", (_, event) => {
   event.respondWith(serveStatic(event));
 });
