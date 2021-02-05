@@ -27,8 +27,8 @@ it("sends an event to segment when a command is run", async () => {
       command: {
         name: "schema push",
         arguments: {
-          sensitive: true
-        }
+          sensitive: true,
+        },
       },
       machine_id: "1234",
       session_id: "12345",
@@ -37,7 +37,7 @@ it("sends an event to segment when a command is run", async () => {
         continuous_integration: null,
       },
       cli_version: "0.0.1",
-      cwd_hash: "890123"
+      cwd_hash: "890123",
     }),
   });
 
@@ -62,12 +62,13 @@ it("sends an event to segment when a command is run", async () => {
         },
         "userAgent": "rover/0.0.1",
       },
-      "event": "schema push",
+      "event": "rover invocation",
       "messageId": "12345",
       "properties": Object {
         "arguments": Object {
           "sensitive": true,
         },
+        "command": "schema push",
         "cwd_hash": "890123",
       },
     }
@@ -89,8 +90,8 @@ it("doesn't report invalid messages", async () => {
       command: {
         name: "schema push",
         arguments: {
-          sensitive: true
-        }
+          sensitive: true,
+        },
       },
       machine_id: "1234",
       session_id: "12345",
@@ -99,8 +100,8 @@ it("doesn't report invalid messages", async () => {
         continuous_integration: null,
       },
       cli_version: "0.0.1",
-      properties: "890123"
-    })
+      properties: "890123",
+    }),
   });
 
   const response: any = await self.trigger("fetch", request);
@@ -111,27 +112,28 @@ it("doesn't report invalid messages", async () => {
   const [url, options] = call;
   expect(url).toContain("segment.io");
   expect(JSON.parse(options!.body as any)).toMatchInlineSnapshot(`
-      Object {
-        "anonymousId": "1234",
-        "context": Object {
-          "app": Object {
-            "name": "rover",
-            "version": "0.0.1",
-          },
-          "library": "CLI Worker",
-          "os": Object {
-            "name": "linux",
-          },
-          "userAgent": "rover/0.0.1",
+    Object {
+      "anonymousId": "1234",
+      "context": Object {
+        "app": Object {
+          "name": "rover",
+          "version": "0.0.1",
         },
-        "event": "schema push",
-        "messageId": "12345",
-        "properties": Object {
-          "arguments": Object {
-            "sensitive": true,
-          },
-          "cwd_hash": "890123",
+        "library": "CLI Worker",
+        "os": Object {
+          "name": "linux",
         },
-      }
-    `);
+        "userAgent": "rover/0.0.1",
+      },
+      "event": "rover invocation",
+      "messageId": "12345",
+      "properties": Object {
+        "arguments": Object {
+          "sensitive": true,
+        },
+        "command": "schema push",
+        "cwd_hash": "890123",
+      },
+    }
+  `);
 });
