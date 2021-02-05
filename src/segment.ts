@@ -27,16 +27,12 @@ export async function track(payload: SegmentEvent) {
   message.context.library = "CLI Worker";
   if (!message.userId && !message.anonymousId) message.anonymousId = v4();
   if (!message.messageId) message.messageId = `${message.context.library}-${v4()}`;
-  try {
-    await f("https://api.segment.io/v1/track", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Basic ${btoa(`${SEGMENT_API_KEY}:`)}`,
-      },
-      body: JSON.stringify(message),
-    });
-  } catch (e) {
-    console.error(e);
-  }
+  await f("https://api.segment.io/v1/track", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Basic ${btoa(`${SEGMENT_API_KEY}:`)}`,
+    },
+    body: JSON.stringify(message),
+  });
 }
