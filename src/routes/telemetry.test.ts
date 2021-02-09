@@ -69,6 +69,7 @@ it("sends an event to segment when a command is run", async () => {
           "sensitive": true,
         },
         "command": "schema push",
+        "continuous_integration": null,
         "cwd_hash": "890123",
       },
     }
@@ -132,6 +133,7 @@ it("doesn't report invalid messages", async () => {
           "sensitive": true,
         },
         "command": "schema push",
+        "continuous_integration": null,
         "cwd_hash": "890123",
       },
     }

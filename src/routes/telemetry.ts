@@ -79,7 +79,8 @@ export async function waitUntil(event: FetchEvent, body: Promise<Session>) {
     properties: {
       command: parsed.command.name,
       cwd_hash: parsed.cwd_hash,
-      arguments: parsed.command.arguments
+      arguments: parsed.command.arguments,
+      continuous_integration: parsed.platform.continuous_integration
     }
   };
   await track(event_payload);
